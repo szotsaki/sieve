@@ -17,7 +17,7 @@ class SieveAccount:
     if self._has_property(name):
       return self._config[self._section][name]
 
-    raise NoSuchPropertyException("Unknown Property "+name)
+    raise NoSuchPropertyException(f'Unknown Property "{name}"')
 
   def get_id(self):
     """

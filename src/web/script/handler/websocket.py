@@ -28,6 +28,8 @@ class WebSocketHandler:
     host = account.get_sieve_host()
     port = int(account.get_sieve_port())
 
+    logging.debug(f'Communicating with "{host}:{port}" with auth username "{account.get_auth_username(request)}"')
+
     # Websocket is read
     with WebSocket(request, context) as websocket:
       with SieveSocket(host, port) as sievesocket:
@@ -42,7 +44,7 @@ class WebSocketHandler:
             account.get_auth_username(request))
 
         # Publish capabilities to client...
-        websocket.send(
-          sievesocket.capabilities)
+        logging.debug(f'Publishing capabilities to client: "{sievesocket.capabilities.decode()}"')
+        websocket.send(sievesocket.capabilities)
 
         MessagePump().run(websocket, sievesocket)

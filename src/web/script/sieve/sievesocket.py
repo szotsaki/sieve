@@ -82,6 +82,8 @@ class SieveSocket:
     self.__socket.send(data)
 
   def start_tls(self) -> None:
+    logging.debug("Securing connection with STARTTLS")
+
     if b'"STARTTLS"' not in self.__capabilities.get_capabilities():
       raise Exception("STARTTLS is not supported")
 
@@ -108,13 +110,18 @@ class SieveSocket:
 
     self.__capabilities.disable_authentication()
 
+    logging.debug(f'Going to authenticate with authorization "{authorization}" and authentication "{authentication}"')
+
     self.send(
       b'AUTHENTICATE "PLAIN" "'+b64encode(
         authorization.encode()+b"\0"
         + authentication.encode()+b"\0"
         + password.encode())+b'"\r\n')
 
-    if Response().decode(self.recv()).status != "OK" :
+    response = self.recv()
+    logging.debug(f'Auth response: "{response.decode().strip()}"')
+
+    if Response().decode(response).status != "OK" :
       raise Exception("Authentication failed")
 
   @property
