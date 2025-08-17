@@ -151,17 +151,32 @@ class Config:
     """
     return self._config["DEFAULT"]["ServerAddress"]
 
+  def get_use_ssl(self):
+    """
+    Whether to use SSL/HTTPS
+    """
+    if "UseSSL" in self._config["DEFAULT"]:
+        return self._config["DEFAULT"].getboolean("UseSSL")
+    else:
+        return True
+
   def get_keyfile(self):
     """
     The keyfile used for securing the server.
     """
-    return self._config["DEFAULT"]["ServerKeyFile"]
+    if self.get_use_ssl() and "ServerKeyFile" in self._config["DEFAULT"]:
+        return self._config["DEFAULT"]["ServerKeyFile"]
+    else:
+        return None
 
   def get_certfile(self):
     """
     The certificate file used for securing the server.
     """
-    return self._config["DEFAULT"]["ServerCertFile"]
+    if self.get_use_ssl() and "ServerCertFile" in self._config["DEFAULT"]:
+        return self._config["DEFAULT"]["ServerCertFile"]
+    else:
+        return None
 
   def get_auth_type(self, section : str):
 

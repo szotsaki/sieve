@@ -45,6 +45,7 @@ config = Config().load(configfile)
 webServer = WebServer(
   address = config.get_address(),
   port = config.get_port(),
+  use_ssl = config.get_use_ssl(),
   keyfile = config.get_keyfile(),
   certfile = config.get_certfile())
 
