@@ -78,7 +78,7 @@ class SieveSocket:
 
     return chunk
 
-  def send(self, data: str) -> None:
+  def send(self, data: bytes) -> None:
     self.__socket.send(data)
 
   def start_tls(self) -> None:
