@@ -116,6 +116,9 @@ class WebSocket:
     while not fin:
       data = self.__context.socket.recv(2)
 
+      if not len(data):
+        raise Exception("Connection closed.")
+
       opcode = data[0] & 0b00001111
       fin = bool(data[0] & 0b10000000)
       length = self.extract_length(data)
