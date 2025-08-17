@@ -34,13 +34,6 @@ class SieveSocket:
 
     capabilities = Capabilities()
     capabilities.decode(self.recv())
-
-    if b'"SASL"' not in capabilities.get_capabilities():
-      raise Exception("Sasl Plain not supported")
-
-    if b'PLAIN' not in capabilities.get_capabilities()[b'"SASL"'][1:-1].split(b" "):
-      raise Exception("Sasl Plain not supported")
-
     self.__capabilities = capabilities
 
   def __del__(self) -> None:
@@ -81,7 +74,7 @@ class SieveSocket:
     chunk = self.__socket.recv(1024*1024)
 
     if chunk == "":
-      raise Exception("Connetion Terminated...")
+      raise Exception("Connection terminated")
 
     return chunk
 
@@ -90,18 +83,26 @@ class SieveSocket:
 
   def start_tls(self) -> None:
     if b'"STARTTLS"' not in self.__capabilities.get_capabilities():
-      raise Exception("Starttls not supported")
+      raise Exception("STARTTLS is not supported")
 
     self.send(b"STARTTLS\r\n")
 
     if Response().decode(self.recv()).status != "OK" :
-      raise Exception("Starting tls failed")
+      raise Exception("Starting TLS failed")
 
     self.upgrade()
 
-    #update the capabilities
+    # update the capabilities
     self.__capabilities.decode(self.recv())
 
+    # Check SASL capabilities here.
+    # Some implementations don't allow SASL auth without using a secure connection (i.e. before STARTTLS).
+    # In those cases, without TLS, the SASL support list is empty.
+    if b'"SASL"' not in self.__capabilities.get_capabilities():
+      raise Exception("SASL is not supported")
+
+    if b'PLAIN' not in self.__capabilities.get_capabilities()[b'"SASL"'][1:-1].split(b" "):
+      raise Exception("SASL PLAIN is not supported")
 
   def authenticate(self, authentication: str, password: str, authorization:str ) -> None:
 
