@@ -117,7 +117,8 @@ class WebSocket:
       data = self.__context.socket.recv(2)
 
       if not len(data):
-        raise Exception("Connection closed.")
+        logging.debug("Connection closed.")
+        return payload
 
       opcode = data[0] & 0b00001111
       fin = bool(data[0] & 0b10000000)
@@ -125,18 +126,15 @@ class WebSocket:
 
       if opcode == 8:
         if not length:
-          raise Exception("Connection gracefully closed.")
+          logging.debug("Connection gracefully closed.")
+          return bytearray()
 
         message = self.extract_masked_data(length)
-
         code = (message[0] << (1*8)) + (message[1] << (0*8))
-
         text = message[2:]
+        logging.debug(f"Connection gracefully closed with code {code}. Text: {text.decode()}")
 
-        logging.debug(str(code) + " - " + text.decode())
-        raise Exception("Connection gracefully closed. "+str(code)+" "+text.decode())
-
-
+        return bytearray()
 
       if opcode == 10:
         self.handle_pong(data)
