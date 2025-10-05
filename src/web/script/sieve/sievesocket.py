@@ -82,7 +82,8 @@ class SieveSocket:
     return chunk
 
   def send(self, data: bytes) -> None:
-    self.__socket.send(data)
+    if self.__socket:
+      self.__socket.send(data)
 
   def start_tls(self) -> None:
     logging.debug("Securing connection with STARTTLS")
