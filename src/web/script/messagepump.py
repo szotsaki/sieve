@@ -1,43 +1,47 @@
-import select
 import logging
+import select
+
+from script.sieve.sievesocket import SieveSocket
+from script.websocket import WebSocket
+
 
 class MessagePump:
+  def __init__(self, websocket: WebSocket, sieve_socket: SieveSocket):
+    self._websocket = websocket
+    self._sieve_socket = sieve_socket
 
-
-  def wait(self, websocket, sievesocket):
-
+  def wait(self):
     ready_to_read, _ready_to_write, in_error \
-      = select.select([websocket, sievesocket], [], [websocket, sievesocket])
+      = select.select([self._websocket, self._sieve_socket], [], [self._websocket, self._sieve_socket])
 
-    if websocket in in_error:
+    if self._websocket in in_error:
       raise Exception("Reading websocket connection failed")
 
-    if sievesocket in in_error:
+    if self._sieve_socket in in_error:
       raise Exception("Reading Sieve socket connection failed")
 
     return ready_to_read
 
-  def run(self, websocket, sievesocket) -> None:
-
+  def run(self) -> None:
     while True:
-      sockets = self.wait(websocket, sievesocket)
+      sockets = self.wait()
 
-      if websocket in sockets:
-        data = websocket.recv()
+      if self._websocket in sockets:
+        data = self._websocket.recv()
 
         if data == b'':
           logging.info("Websocket terminated")
           return
 
         logging.debug(data)
-        sievesocket.send(data)
+        self._sieve_socket.send(data)
 
-      if sievesocket in sockets:
-        data = sievesocket.recv()
+      if self._sieve_socket in sockets:
+        data = self._sieve_socket.recv()
 
         if data == b'':
           logging.info("Sieve socket terminated")
           return
 
         logging.debug(data)
-        websocket.send(data)
+        self._websocket.send(data)

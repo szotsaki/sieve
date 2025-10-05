@@ -45,4 +45,4 @@ class WebSocketHandler:
       logging.debug(f'Publishing capabilities to web client: "{sievesocket.capabilities.decode()}"')
       websocket.send(sievesocket.capabilities)
 
-      MessagePump().run(websocket, sievesocket)
+      MessagePump(websocket, sievesocket).run()
