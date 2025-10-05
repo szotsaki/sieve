@@ -4,40 +4,40 @@ import logging
 class MessagePump:
 
 
-  def wait(self, server, client):
+  def wait(self, websocket, sievesocket):
 
     ready_to_read, _ready_to_write, in_error \
-      = select.select([server, client], [], [server, client])
+      = select.select([websocket, sievesocket], [], [websocket, sievesocket])
 
-    if server in in_error:
-      raise Exception("Reading server connection failed")
+    if websocket in in_error:
+      raise Exception("Reading websocket connection failed")
 
-    if client in in_error:
-      raise Exception("Reading client connection failed")
+    if sievesocket in in_error:
+      raise Exception("Reading Sieve socket connection failed")
 
     return ready_to_read
 
-  def run(self, server, client) -> None:
+  def run(self, websocket, sievesocket) -> None:
 
     while True:
-      sockets = self.wait(server, client)
+      sockets = self.wait(websocket, sievesocket)
 
-      if server in sockets:
-        data = server.recv()
+      if websocket in sockets:
+        data = websocket.recv()
 
         if data == b'':
-          logging.info("Server terminated")
+          logging.info("Websocket terminated")
           return
 
         logging.debug(data)
-        client.send(data)
+        sievesocket.send(data)
 
-      if client in sockets:
-        data = client.recv()
+      if sievesocket in sockets:
+        data = sievesocket.recv()
 
         if data == b'':
-          logging.info(" Client terminated")
+          logging.info("Sieve socket terminated")
           return
 
         logging.debug(data)
-        server.send(data)
+        websocket.send(data)

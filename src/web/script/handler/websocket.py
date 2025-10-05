@@ -31,20 +31,18 @@ class WebSocketHandler:
     logging.debug(f'Communicating with "{host}:{port}" with auth username "{account.get_auth_username(request)}"')
 
     # Websocket is read
-    with WebSocket(request, context) as websocket:
-      with SieveSocket(host, port) as sievesocket:
+    with WebSocket(request, context) as websocket, SieveSocket(host, port) as sievesocket:
+      sievesocket.start_tls()
 
-        sievesocket.start_tls()
+      if not account.can_authenticate():
+        logging.info(f"Do Proxy authentication for {account.get_name()}")
+        sievesocket.authenticate(
+          account.get_sieve_user(request),
+          account.get_sieve_password(request),
+          account.get_auth_username(request))
 
-        if not account.can_authenticate():
-          logging.info(f"Do Proxy authentication for {account.get_name()}")
-          sievesocket.authenticate(
-            account.get_sieve_user(request),
-            account.get_sieve_password(request),
-            account.get_auth_username(request))
+      # Publish capabilities to client...
+      logging.debug(f'Publishing capabilities to web client: "{sievesocket.capabilities.decode()}"')
+      websocket.send(sievesocket.capabilities)
 
-        # Publish capabilities to client...
-        logging.debug(f'Publishing capabilities to client: "{sievesocket.capabilities.decode()}"')
-        websocket.send(sievesocket.capabilities)
-
-        MessagePump().run(websocket, sievesocket)
+      MessagePump().run(websocket, sievesocket)
